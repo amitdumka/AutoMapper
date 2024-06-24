@@ -1,7 +1,3 @@
-using System;
-using Shouldly;
-using Xunit;
-
 namespace AutoMapper.UnitTests
 {
     namespace Profiles
@@ -30,7 +26,7 @@ namespace AutoMapper.UnitTests
                 public string Value { get; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.DisableConstructorMapping();
 
@@ -88,7 +84,7 @@ namespace AutoMapper.UnitTests
                 }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 _customProfile = new CustomProfile1();
                 cfg.AddProfile(_customProfile);
@@ -147,7 +143,7 @@ namespace AutoMapper.UnitTests
                 public string Value { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.AddProfile<AProfile>();
             });

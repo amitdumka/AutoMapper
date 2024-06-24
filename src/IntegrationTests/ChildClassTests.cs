@@ -1,16 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Data.Entity;
-using System.Linq;
-using Xunit;
-using Shouldly;
-
-namespace AutoMapper.IntegrationTests.Net4
+﻿namespace AutoMapper.IntegrationTests
 {
     namespace ChildClassTests
     {
-        using AutoMapper.UnitTests;
-        using QueryableExtensions;
-
         public class Base
         {
             public int BaseID { get; set; }
@@ -43,36 +34,29 @@ namespace AutoMapper.IntegrationTests.Net4
             public string Sub1 { get; set; }
         }
 
-        public class TestContext : DbContext
+        public class TestContext : LocalDbContext
         {
-            public TestContext()
-                : base()
-            {
-                Database.SetInitializer<TestContext>(new DatabaseInitializer());
-            }
-
             public DbSet<Base> Bases { get; set; }
             public DbSet<Sub> Subs { get; set; }
-
         }
 
         public class DatabaseInitializer : DropCreateDatabaseAlways<TestContext>
         {
             protected override void Seed(TestContext testContext)
             {
-                testContext.Bases.Add(new Base() { BaseID = 1, Base1 = "base1", Sub = new Sub() { BaseId = 1, Sub1 = "sub1" } });
+                testContext.Bases.Add(new Base() { Base1 = "base1", Sub = new Sub() { Sub1 = "sub1" } });
 
                 base.Seed(testContext);
             }
         }
 
 
-        public class UnitTest : AutoMapperSpecBase
+        public class UnitTest : IntegrationTest<DatabaseInitializer>
         {
-            protected override MapperConfiguration Configuration => new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
-                cfg.CreateMap<Base, BaseDTO>();
-                cfg.CreateMap<Sub, SubDTO>();
+                cfg.CreateProjection<Base, BaseDTO>();
+                cfg.CreateProjection<Sub, SubDTO>();
             });
 
             [Fact]
@@ -80,7 +64,7 @@ namespace AutoMapper.IntegrationTests.Net4
             {
                 using (var context = new TestContext())
                 {
-                    var baseEntitiy = context.Bases.FirstOrDefault();
+                    var baseEntitiy = context.Bases.Include(b => b.Sub).FirstOrDefault();
                     baseEntitiy.ShouldNotBeNull();
                     baseEntitiy.BaseID.ShouldBe(1);
                     baseEntitiy.Sub.Sub1.ShouldBe("sub1");
@@ -108,7 +92,8 @@ namespace AutoMapper.IntegrationTests.Net4
                     baseDTO.Sub.Sub1.ShouldBe("sub1");
                 }
             }
+            [Fact]
+            public void MapShouldThrow() => new Action(() => Mapper.Map<SubDTO>(new Sub())).ShouldThrow<AutoMapperConfigurationException>().Message.ShouldBe("CreateProjection works with ProjectTo, not with Map.");
         }
-
     }
 }

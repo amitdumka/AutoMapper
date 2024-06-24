@@ -1,10 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using Shouldly;
-using Xunit;
-
 namespace AutoMapper.UnitTests
 {
     namespace Dictionaries
@@ -77,7 +70,7 @@ namespace AutoMapper.UnitTests
                 public int Value { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg => 
+            protected override MapperConfiguration CreateConfiguration() => new(cfg => 
             {
                 cfg.CreateMap<Source, Destination>();
                 cfg.CreateMap<SourceValue, DestinationValue>();
@@ -131,7 +124,7 @@ namespace AutoMapper.UnitTests
                 public int Value { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<Source, Destination>();
                 cfg.CreateMap<SourceValue, DestinationValue>();
@@ -175,7 +168,7 @@ namespace AutoMapper.UnitTests
                 public System.Collections.Generic.IDictionary<string, FooDto> Bar { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.AllowNullDestinationValues = false;
                 cfg.CreateMap<Foo, FooDto>();
@@ -218,7 +211,7 @@ namespace AutoMapper.UnitTests
                 public System.Collections.Generic.IDictionary<string, string> Items { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<SourceDto, DestDto>()
                     .ForMember(d => d.Items, opt => opt.MapFrom(s => s.Items));
@@ -432,7 +425,7 @@ namespace AutoMapper.UnitTests
                 public string Value { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<FooDto, FooObject>();
                 cfg.CreateMap<DestinationValuePair, KeyValuePair<string, string>>()
@@ -480,7 +473,112 @@ namespace AutoMapper.UnitTests
                 }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg => cfg.CreateMap<BaseClassWithDictionary, DerivedClassWithDictionary>());
+            protected override MapperConfiguration CreateConfiguration() => new(cfg => cfg.CreateMap<BaseClassWithDictionary, DerivedClassWithDictionary>());
+            [Fact]
+            public void Validate() => AssertConfigurationIsValid();
         }
     }
+
+    public class When_mapping_from_a_list_of_object_to_IReadOnly_dictionary : AutoMapperSpecBase
+    {
+        private FooObject _result;
+
+        public class FooDto
+        {
+            public DestinationValuePair[] Values { get; set; }
+        }
+
+        public class FooObject
+        {
+            public IReadOnlyDictionary<string, string> Values { get; set; }
+        }
+
+        public class DestinationValuePair
+        {
+            public string Key { get; set; }
+            public string Value { get; set; }
+        }
+
+        protected override MapperConfiguration CreateConfiguration() => new(cfg =>
+        {
+            cfg.CreateMap<FooDto, FooObject>();
+            cfg.CreateMap<DestinationValuePair, KeyValuePair<string, string>>()
+                .ConvertUsing(src => new KeyValuePair<string, string>(src.Key, src.Value));
+        });
+
+        protected override void Because_of()
+        {
+            var source = new FooDto
+            {
+                Values = new List<DestinationValuePair>
+                    {
+                        new DestinationValuePair {Key = "Key1", Value = "Value1"},
+                        new DestinationValuePair {Key = "Key2", Value = "Value2"}
+                    }.ToArray()
+            };
+
+            _result = Mapper.Map<FooDto, FooObject>(source);
+        }
+
+        [Fact]
+        public void Should_perform_mapping_for_individual_values()
+        {
+            _result.Values.Count.ShouldBe(2);
+
+            _result.Values["Key1"].ShouldBe("Value1");
+            _result.Values["Key2"].ShouldBe("Value2");
+        }
+    }
+
+    public class When_mapping_from_a_list_of_object_to_readonly_dictionary : AutoMapperSpecBase
+    {
+        private FooObject _result;
+
+        public class FooDto
+        {
+            public DestinationValuePair[] Values { get; set; }
+        }
+
+        public class FooObject
+        {
+            public ReadOnlyDictionary<string, string> Values { get; set; }
+        }
+
+        public class DestinationValuePair
+        {
+            public string Key { get; set; }
+            public string Value { get; set; }
+        }
+
+        protected override MapperConfiguration CreateConfiguration() => new(cfg =>
+        {
+            cfg.CreateMap<FooDto, FooObject>();
+            cfg.CreateMap<DestinationValuePair, KeyValuePair<string, string>>()
+                .ConvertUsing(src => new KeyValuePair<string, string>(src.Key, src.Value));
+        });
+
+        protected override void Because_of()
+        {
+            var source = new FooDto
+            {
+                Values = new List<DestinationValuePair>
+                    {
+                        new DestinationValuePair {Key = "Key1", Value = "Value1"},
+                        new DestinationValuePair {Key = "Key2", Value = "Value2"}
+                    }.ToArray()
+            };
+
+            _result = Mapper.Map<FooDto, FooObject>(source);
+        }
+
+        [Fact]
+        public void Should_perform_mapping_for_individual_values()
+        {
+            _result.Values.Count.ShouldBe(2);
+
+            _result.Values["Key1"].ShouldBe("Value1");
+            _result.Values["Key2"].ShouldBe("Value2");
+        }
+    }
+
 }

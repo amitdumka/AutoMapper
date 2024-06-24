@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using Shouldly;
-using Xunit;
-using System.Linq;
-
 namespace AutoMapper.UnitTests
 {
     namespace General
@@ -19,7 +13,7 @@ namespace AutoMapper.UnitTests
                 public string SomePropertyThatDoesNotExistOnModel { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<ModelObject, ModelDto>();
             });
@@ -45,7 +39,7 @@ namespace AutoMapper.UnitTests
             {
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.AllowNullDestinationValues = false;
                 cfg.CreateMap<ModelObject, ModelDto>();
@@ -78,7 +72,7 @@ namespace AutoMapper.UnitTests
                 }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<ModelObject, ModelDto>();
             });
@@ -113,7 +107,7 @@ namespace AutoMapper.UnitTests
                 public string NotAString { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
 
                 cfg.CreateMap<ModelObject, ModelDto>();
@@ -153,7 +147,7 @@ namespace AutoMapper.UnitTests
                 public string[] SomeCoolValues { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
 
                 cfg.CreateMap<ModelObject, ModelDto>();
@@ -187,7 +181,7 @@ namespace AutoMapper.UnitTests
                 public DateTime NullableDate { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<ModelObject, ModelDto>();
             });
@@ -217,7 +211,7 @@ namespace AutoMapper.UnitTests
                 public string SomeValue { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<ModelObject, ModelDto>();
 
@@ -258,7 +252,7 @@ namespace AutoMapper.UnitTests
                 public string SomeValue { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<ModelObject, ModelDto>();
 
@@ -301,7 +295,7 @@ namespace AutoMapper.UnitTests
                 public int SomeNullableValue { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<ModelObject, ModelDto>();
             });
@@ -342,7 +336,7 @@ namespace AutoMapper.UnitTests
                 public int? SomeOtherValue { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<ModelObject, ModelDto>();
 
@@ -385,7 +379,7 @@ namespace AutoMapper.UnitTests
                 public int? SomeOtherValue2 { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<ModelObject, ModelDto>()
                     .ForMember(dest => dest.SomeOtherValue2, opt => opt.MapFrom(src => src.SomeOtherValue));
@@ -425,7 +419,7 @@ namespace AutoMapper.UnitTests
                 public Tuple<int, int> Value { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<Source, Dest>();
             });

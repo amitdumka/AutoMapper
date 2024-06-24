@@ -2,12 +2,6 @@
 {
     namespace NestedExpressionTests
     {
-        using System.Collections.Generic;
-        using System.Linq;
-        using QueryableExtensions;
-        using Shouldly;
-        using Xunit;
-
         public class NestedExpressionMapFromTests
         {
             private MapperConfiguration _config;
@@ -15,7 +9,7 @@
             public NestedExpressionMapFromTests()
             {
                 _config = new MapperConfiguration(cfg => 
-                    cfg.CreateMap<Parent, ParentDto>()
+                    cfg.CreateProjection<Parent, ParentDto>()
                         .ForMember(dest => dest.TotalSum, opt => opt.MapFrom(p => p.Children.Sum(child => child.Value))));
             }
 

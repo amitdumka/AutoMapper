@@ -1,39 +1,29 @@
-﻿namespace AutoMapper.UnitTests
+﻿namespace AutoMapper.UnitTests;
+public class SeparateConfiguration : NonValidatingSpecBase
 {
-    using Configuration;
-    using Shouldly;
-    using Xunit;
-
-    public class SeparateConfiguration : NonValidatingSpecBase
+    public class Source
     {
-        public class Source
-        {
-            public int Value { get; set; }
-        }
-        public class Dest
-        {
-            public int Value { get; set; }
-        }
-        public SeparateConfiguration()
-        {
-            var expr = new MapperConfigurationExpression();
+        public int Value { get; set; }
+    }
+    public class Dest
+    {
+        public int Value { get; set; }
+    }
+    protected override MapperConfiguration CreateConfiguration()
+    {
+        var expr = new MapperConfigurationExpression();
 
-            expr.CreateMap<Source, Dest>();
+        expr.CreateMap<Source, Dest>();
 
-            var configuration = new MapperConfiguration(expr);
+        return new MapperConfiguration(expr);
+    }
 
-            Configuration = configuration;
-        }
+    [Fact]
+    public void Should_use_passed_in_configuration()
+    {
+        var source = new Source {Value = 5};
+        var dest = Mapper.Map<Source, Dest>(source);
 
-        protected override MapperConfiguration Configuration { get; }
-
-        [Fact]
-        public void Should_use_passed_in_configuration()
-        {
-            var source = new Source {Value = 5};
-            var dest = Mapper.Map<Source, Dest>(source);
-
-            dest.Value.ShouldBe(source.Value);
-        }
+        dest.Value.ShouldBe(source.Value);
     }
 }

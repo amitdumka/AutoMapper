@@ -1,14 +1,7 @@
-using Xunit;
-using Shouldly;
-using System.Linq;
-
 namespace AutoMapper.UnitTests
 {
     namespace NonGenericReverseMapping
     {
-        using System;
-        using System.Text.RegularExpressions;
-
         public class When_reverse_mapping_classes_with_simple_properties : AutoMapperSpecBase
         {
             private Source _source;
@@ -22,7 +15,7 @@ namespace AutoMapper.UnitTests
                 public int Value { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap(typeof (Source), typeof (Destination)).ReverseMap();
             });
@@ -43,7 +36,7 @@ namespace AutoMapper.UnitTests
             }
         }
 
-        public class When_reverse_mapping_and_ignoring_via_method : NonValidatingSpecBase
+        public class When_reverse_mapping_and_ignoring_via_method : AutoMapperSpecBase
         {
             public class Source
             {
@@ -56,21 +49,17 @@ namespace AutoMapper.UnitTests
                 public int Ignored { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap(typeof (Source), typeof (Dest))
                     .ForMember("Ignored", opt => opt.Ignore())
                     .ReverseMap();
             });
-
             [Fact]
-            public void Should_show_valid()
-            {
-                typeof(AutoMapperConfigurationException).ShouldNotBeThrownBy(() => Configuration.AssertConfigurationIsValid());
-            }
+            public void Validate() => AssertConfigurationIsValid();
         }
 
-        public class When_reverse_mapping_and_ignoring : SpecBase
+        public class When_reverse_mapping_and_ignoring : NonValidatingSpecBase
         {
             public class Foo
             {

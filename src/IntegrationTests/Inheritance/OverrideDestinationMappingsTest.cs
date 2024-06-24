@@ -1,91 +1,79 @@
-﻿using AutoMapper;
-using Xunit;
-using System.Linq;
-using Shouldly;
-using System.Data.Entity;
-using AutoMapper.UnitTests;
+﻿namespace AutoMapper.IntegrationTests.Inheritance;
 
-namespace AutoMapper.IntegrationTests.Net4
+public class OverrideDestinationMappingsTest : IntegrationTest<OverrideDestinationMappingsTest.DatabaseInitializer>
 {
-    public class OverrideDestinationMappingsTest : AutoMapperSpecBase
+    public class Context : LocalDbContext
     {
-        public class Context : DbContext
+        public DbSet<Entity> Entity { get; set; }
+    }
+
+    public class DatabaseInitializer : DropCreateDatabaseAlways<Context>
+    {
+        protected override void Seed(Context context)
         {
-            public Context()
+            context.Entity.AddRange(new[]
             {
-                Database.SetInitializer<Context>(new DatabaseInitializer());
-            }
-
-            public DbSet<Entity> Entity { get; set; }
+                new Entity { Child = new ChildEntity { SomeValue = "Alain Brito"} },
+                new Entity { Child = new ChildEntity { SomeValue = "Jimmy Bogard"} },
+                new Entity { Child = new ChildEntity { SomeValue = "Bill Gates"} }
+            });
+            base.Seed(context);
         }
+    }
 
-        public class DatabaseInitializer : CreateDatabaseIfNotExists<Context>
+    [Fact]
+    public void Map_WhenOverrideDestinationTypeAndSourceIsDerived_MustCreateOverriddenDestinationType()
+    {
+        Entity entity = LoadEntity();
+
+        var model = Mapper.Map<Model>(entity);
+
+        model.Child.ShouldBeOfType<ChildModel>();
+    }
+
+    private static Entity LoadEntity()
+    {
+        using(var context = new Context())
         {
-            protected override void Seed(Context context)
-            {
-                context.Entity.AddRange(new[]
-                {
-                    new Entity { Id = 1, Child = new ChildEntity { SomeValue = "Alain Brito"} },
-                    new Entity { Id = 2, Child = new ChildEntity { SomeValue = "Jimmy Bogard"} },
-                    new Entity { Id = 3, Child = new ChildEntity { SomeValue = "Bill Gates"} }
-                });
-                base.Seed(context);
-            }
+            return context.Entity.Include(e => e.Child).First();
         }
+    }
 
-        [Fact]
-        public void Map_WhenOverrideDestinationTypeAndSourceIsDerived_MustCreateOverriddenDestinationType()
-        {
-            Entity entity = LoadEntity();
+    protected override MapperConfiguration CreateConfiguration() => new(cfg =>
+    {
+        cfg.CreateMap<Entity, Model>();
 
-            var model = Mapper.Map<Model>(entity);
+        cfg.CreateMap<ChildEntity, ChildModelBase>()
+            .Include<ChildEntity, ChildModel>()
+            .ForMember(x => x.SomeValue, x => x.Ignore())
+            .As<ChildModel>();
 
-            model.Child.ShouldBeOfType<ChildModel>();
-        }
+        cfg.CreateMap<ChildEntity, ChildModel>();
+    });
 
-        private static Entity LoadEntity()
-        {
-            using(var context = new Context())
-            {
-                return context.Entity.First();
-            }
-        }
+    public class Entity
+    {
+        public int Id { get; set; }
+        public ChildEntity Child { get; set; }
+    }
 
-        protected override MapperConfiguration Configuration => new MapperConfiguration(cfg =>
-        {
-            cfg.CreateMap<Entity, Model>();
+    public class ChildEntity
+    {
+        public int Id { get; set; }
+        public string SomeValue { get; set; }
+    }
 
-            cfg.CreateMap<ChildEntity, ChildModelBase>()
-                .Include<ChildEntity, ChildModel>()
-                .ForMember(x => x.SomeValue, x => x.Ignore())
-                .As<ChildModel>();
+    public class Model
+    {
+        public ChildModelBase Child { get; set; }
+    }
 
-            cfg.CreateMap<ChildEntity, ChildModel>();
-        });
+    public abstract class ChildModelBase
+    {
+        public string SomeValue { get; set; }
+    }
 
-        public class Entity
-        {
-            public int Id { get; set; }
-            public ChildEntity Child { get; set; }
-        }
-
-        public class ChildEntity
-        {
-            public string SomeValue { get; set; }
-        }
-
-        public class Model
-        {
-            public ChildModelBase Child { get; set; }
-        }
-
-        public abstract class ChildModelBase
-        {
-            public string SomeValue { get; set; }
-        }
-
-        public class ChildModel : ChildModelBase
-        {
-        }
+    public class ChildModel : ChildModelBase
+    {
     }
 }

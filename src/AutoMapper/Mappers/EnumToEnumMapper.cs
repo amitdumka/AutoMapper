@@ -1,49 +1,19 @@
-using System;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using AutoMapper.Mappers.Internal;
-using static System.Linq.Expressions.Expression;
-
-namespace AutoMapper.Mappers
+namespace AutoMapper.Internal.Mappers;
+public class EnumToEnumMapper : IObjectMapper
 {
-    public class EnumToEnumMapper : IObjectMapper
+    private static readonly MethodInfo TryParseMethod = typeof(Enum).StaticGenericMethod("TryParse", parametersCount: 3);
+    public bool IsMatch(TypePair context) => context.IsEnumToEnum();
+    public Expression MapExpression(IGlobalConfiguration configuration, ProfileMap profileMap,
+        MemberMap memberMap, Expression sourceExpression, Expression destExpression)
     {
-        public static TDestination Map<TSource, TDestination>(TSource source)
-        {
-            var sourceEnumType = ElementTypeHelper.GetEnumerationType(typeof(TSource));
-            var destEnumType = ElementTypeHelper.GetEnumerationType(typeof(TDestination));
-
-            if (!Enum.IsDefined(sourceEnumType, source))
-            {
-                return (TDestination)Enum.ToObject(destEnumType, source);
-            }
-
-            if (!Enum.GetNames(destEnumType).Contains(source.ToString(), StringComparer.OrdinalIgnoreCase))
-            {
-                var underlyingSourceType = Enum.GetUnderlyingType(sourceEnumType);
-                var underlyingSourceValue = System.Convert.ChangeType(source, underlyingSourceType);
-
-                return (TDestination)Enum.ToObject(destEnumType, underlyingSourceValue);
-            }
-
-            return (TDestination)Enum.Parse(destEnumType, Enum.GetName(sourceEnumType, source), true);
-        }
-
-        private static readonly MethodInfo MapMethodInfo = typeof(EnumToEnumMapper).GetAllMethods().First(_ => _.IsStatic);
-
-        public bool IsMatch(TypePair context)
-        {
-            var sourceEnumType = ElementTypeHelper.GetEnumerationType(context.SourceType);
-            var destEnumType = ElementTypeHelper.GetEnumerationType(context.DestinationType);
-            return sourceEnumType != null && destEnumType != null;
-        }
-
-        public Expression MapExpression(IConfigurationProvider configurationProvider, ProfileMap profileMap,
-            IMemberMap memberMap, Expression sourceExpression, Expression destExpression,
-            Expression contextExpression) =>
-            Call(null,
-                MapMethodInfo.MakeGenericMethod(sourceExpression.Type, destExpression.Type), 
-                sourceExpression);
+        var destinationType = destExpression.Type;
+        var sourceToString = Call(sourceExpression, ObjectToString);
+        var result = Variable(destinationType, "destinationEnumValue");
+        var ignoreCase = True;
+        var tryParse = Call(TryParseMethod.MakeGenericMethod(destinationType), sourceToString, ignoreCase, result);
+        var (variables, statements) = configuration.Scratchpad();
+        variables.Add(result);
+        statements.Add(Condition(tryParse, result, Convert(sourceExpression, destinationType)));
+        return Block(variables, statements);
     }
 }

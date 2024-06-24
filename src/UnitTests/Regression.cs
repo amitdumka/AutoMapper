@@ -1,11 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using Shouldly;
-using Xunit;
-using System.Linq;
-
 namespace AutoMapper.UnitTests
 {
     namespace Regression
@@ -26,7 +18,7 @@ namespace AutoMapper.UnitTests
         }
         public class automapper_fails_to_map_custom_mappings_when_mapping_collections_for_an_interface : AutoMapperSpecBase
         {
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<ITestDomainItem, TestDtoItem>()
                     .ForMember(d => d.Id, s => s.MapFrom(x => x.ItemId));
@@ -76,7 +68,7 @@ namespace AutoMapper.UnitTests
                 }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<Source, Destination>();
                 cfg.CreateMap<DateTime?, MyCustomDate>()
@@ -105,7 +97,7 @@ namespace AutoMapper.UnitTests
 
         public class TestEnumerable : AutoMapperSpecBase
         {
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<Person, PersonModel>();
             });

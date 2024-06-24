@@ -2,11 +2,6 @@
 {
     namespace NestedAndArraysTests
     {
-        using System.Collections.Generic;
-        using QueryableExtensions;
-        using Xunit;
-        using System.Linq;
-
         public class LinqTests
         {
 
@@ -50,11 +45,11 @@
 
                 var config = new MapperConfiguration(cfg =>
                 {
-                    cfg.CreateMap<Entity, EntityViewModel>()
+                    cfg.CreateProjection<Entity, EntityViewModel>()
                         .ForMember(m => m.SubEntityNames, o => o.MapFrom(f => f.SubEntities.Select(e => e.Name)));
                 });
 
-                var expression = config.ExpressionBuilder.GetMapExpression<Entity, EntityViewModel>();
+                var expression = config.Internal().ProjectionBuilder.GetMapExpression<Entity, EntityViewModel>();
 
                 var entity = new Entity
                 {
@@ -82,13 +77,13 @@
             {
                 var config = new MapperConfiguration(cfg =>
                 {
-                    cfg.CreateMap<SubEntity, SubEntityViewModel>()
+                    cfg.CreateProjection<SubEntity, SubEntityViewModel>()
                         .ForMember(m => m.Description, o => o.MapFrom(s => s.Description));
 
-                    cfg.CreateMap<Entity, EntityDetailledViewModel>();
+                    cfg.CreateProjection<Entity, EntityDetailledViewModel>();
                 });
 
-                var expression = config.ExpressionBuilder.GetMapExpression<Entity, EntityDetailledViewModel>();
+                var expression = config.Internal().ProjectionBuilder.GetMapExpression<Entity, EntityDetailledViewModel>();
 
                 var entity = new Entity
                 {

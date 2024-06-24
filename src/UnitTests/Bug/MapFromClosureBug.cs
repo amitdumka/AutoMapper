@@ -1,70 +1,65 @@
-﻿using FakeItEasy;
-
-namespace AutoMapper.UnitTests.Bug
+﻿namespace AutoMapper.UnitTests.Bug;
+public class MapFromClosureBug : NonValidatingSpecBase
 {
-    using System;
-    using Shouldly;
+    private static readonly IDateProvider _dateProvider = new DateProvider();
 
-    public class MapFromClosureBug : SpecBaseBase
+    class DateProvider : IDateProvider
     {
-        private static readonly IDateProvider _dateProvider;
+        public DateTime CurrentRestaurantTime(Restaurant restaurant) => DateTime.Now;
+    }
 
-        static MapFromClosureBug() => _dateProvider = A.Fake<IDateProvider>();
+    public interface IDateProvider
+    {
+        DateTime CurrentRestaurantTime(Restaurant restaurant);
+    }
 
-        public interface IDateProvider
+    public class Result
+    {
+        public Booking Booking { get; set; }
+    }
+
+    public class Restaurant
+    {
+    }
+
+    public class Booking
+    {
+        public Restaurant Restaurant { get; set; }
+
+        public int? CalculateTotal(DateTime currentTime)
         {
-            DateTime CurrentRestaurantTime(Restaurant restaurant);
+            return null;
         }
+    }
 
-        public class Result
+    public class ResultDto
+    {
+        public BookingDto Booking { get; set; }
+    }
+
+    public class BookingDto
+    {
+        public int? Total { get; set; }
+    }
+    [Fact]
+    public void Should_map_successfully()
+    {
+        var mapperConfiguration = new MapperConfiguration(cfg =>
         {
-            public Booking Booking { get; set; }
-        }
+            cfg.CreateMap<Result, ResultDto>();
+            cfg.CreateMap<Booking, BookingDto>()
+                .ForMember(d => d.Total,
+                    o => o.MapFrom(b => b.CalculateTotal(_dateProvider.CurrentRestaurantTime(b.Restaurant))));
+        });
 
-        public class Restaurant
-        {
-        }
+        var mapper = mapperConfiguration.CreateMapper();
 
-        public class Booking
-        {
-            public Restaurant Restaurant { get; set; }
+        var result = new Result { Booking = new Booking() };
 
-            public int? CalculateTotal(DateTime currentTime)
-            {
-                return null;
-            }
-        }
+        // Act
+        var dto = mapper.Map<ResultDto>(result);
 
-        public class ResultDto
-        {
-            public BookingDto Booking { get; set; }
-        }
-
-        public class BookingDto
-        {
-            public int? Total { get; set; }
-        }
-
-        public void Should_map_successfully()
-        {
-            var mapperConfiguration = new MapperConfiguration(cfg =>
-            {
-                cfg.CreateMap<Result, ResultDto>();
-                cfg.CreateMap<Booking, BookingDto>()
-                    .ForMember(d => d.Total,
-                        o => o.MapFrom(b => b.CalculateTotal(_dateProvider.CurrentRestaurantTime(b.Restaurant))));
-            });
-
-            var mapper = mapperConfiguration.CreateMapper();
-
-            var result = new Result { Booking = new Booking() };
-
-            // Act
-            var dto = mapper.Map<ResultDto>(result);
-
-            // Assert
-            dto.ShouldNotBeNull();
-        }
-
+        // Assert
+        dto.ShouldNotBeNull();
     }
 }

@@ -1,7 +1,3 @@
-using System;
-using Shouldly;
-using Xunit;
-
 namespace AutoMapper.UnitTests
 {
     namespace Indexers
@@ -21,7 +17,7 @@ namespace AutoMapper.UnitTests
                 public string this[string key] { get { return null; }}
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<Source, Destination>();
             });
@@ -36,23 +32,6 @@ namespace AutoMapper.UnitTests
             {
                 _result.Value.ShouldBe("Bob");
             }
-
-            [Fact]
-            public void Should_pass_configuration_check()
-            {
-                Exception thrown = null;
-                try
-                {
-                    Configuration.AssertConfigurationIsValid();
-                }
-                catch (Exception ex)
-                {
-                    thrown = ex;
-                }
-
-                thrown.ShouldBeNull();
-            }
         }
-
     }
 }

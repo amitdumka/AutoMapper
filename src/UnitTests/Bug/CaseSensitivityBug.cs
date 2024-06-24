@@ -1,28 +1,19 @@
-﻿namespace AutoMapper.UnitTests.Bug
+﻿namespace AutoMapper.UnitTests.Bug;
+public class CaseSensitivityBug : AutoMapperSpecBase
 {
-    using Xunit;
-
-    public class CaseSensitivityBug : NonValidatingSpecBase
+    protected override MapperConfiguration CreateConfiguration() => new(cfg =>
     {
-        protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
-        {
-            cfg.CreateMap<Foo, Bar>();
-        });
-
-        [Fact]
-        public void TestMethod1()
-        {
-            typeof(AutoMapperConfigurationException).ShouldNotBeThrownBy(Configuration.AssertConfigurationIsValid);
-        }
-
-        public class Foo
-        {
-            public int ID { get; set; }
-        }
-
-        public class Bar
-        {
-            public int id { get; set; }
-        }
+        cfg.CreateMap<Foo, Bar>();
+    });
+    public class Foo
+    {
+        public int ID { get; set; }
     }
+
+    public class Bar
+    {
+        public int id { get; set; }
+    }
+    [Fact]
+    public void Validate() => AssertConfigurationIsValid();
 }

@@ -2,10 +2,6 @@
 {
     namespace ConditionBug
     {
-        using System.Collections.Generic;
-        using Shouldly;
-        using Xunit;
-
         public class Example : AutoMapperSpecBase
         {
             public class SubSource
@@ -28,7 +24,7 @@
                 public string Value { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<Source, Destination>()
                     .ForMember(dest => dest.Value, opt =>
@@ -72,7 +68,7 @@
                 public int Value { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
                 cfg.CreateMap<Source, Destination>()
                     .ForMember(d => d.Value, opt =>
                     {
@@ -93,10 +89,6 @@
 
     namespace ConditionPropertyBug
     {
-        using System;
-        using Shouldly;
-        using Xunit;
-
         public class Example : AutoMapperSpecBase
         {
             public class Source
@@ -125,7 +117,7 @@
                 public int BasePrice { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
                 cfg.CreateMap<Source, Destination>()
                     .ForMember(itemDTO => itemDTO.BasePrice,
                         config =>
@@ -157,9 +149,6 @@
 
     namespace SourceValueConditionPropertyBug
     {
-        using Shouldly;
-        using Xunit;
-
         public class Source
         {
             public int Value { get; set; }
@@ -172,7 +161,7 @@
 
         public class ConditionTests : AutoMapperSpecBase
         {
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<Source, Dest>()
                     .ForMember(d => d.Value, opt => opt.Condition((src, dest, srcVal, destVal) => destVal == null));
@@ -198,11 +187,6 @@
 
     namespace SourceValueExceptionConditionPropertyBug
     {
-        using System;
-        using System.Collections.Generic;
-        using Shouldly;
-        using Xunit;
-
         public enum Property
         {
             Value1 = 0,
@@ -273,7 +257,7 @@
 
         public class ConditionTests : NonValidatingSpecBase
         {
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<Source, Dest>()
                     .ForMember(d => d.Value1, opt => opt.PreCondition((Source src) => false))

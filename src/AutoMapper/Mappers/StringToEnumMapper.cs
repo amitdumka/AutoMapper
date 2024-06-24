@@ -1,53 +1,37 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.Serialization;
-using AutoMapper.Internal;
-using AutoMapper.Mappers.Internal;
-
-namespace AutoMapper.Mappers
+namespace AutoMapper.Internal.Mappers;
+public class StringToEnumMapper : IObjectMapper
 {
-    using static ExpressionFactory;
-
-    public class StringToEnumMapper : IObjectMapper
+    private static readonly MethodInfo EqualsMethod = typeof(StringToEnumMapper).GetMethod(nameof(StringCompareOrdinalIgnoreCase));
+    private static readonly MethodInfo ParseMethod = typeof(Enum).StaticGenericMethod("Parse", parametersCount: 2);
+    private static readonly PropertyInfo Length = typeof(string).GetProperty("Length");
+    public bool IsMatch(TypePair context) => context.SourceType == typeof(string) && context.DestinationType.IsEnum;
+    public Expression MapExpression(IGlobalConfiguration configuration, ProfileMap profileMap,
+        MemberMap memberMap, Expression sourceExpression, Expression destExpression)
     {
-        public bool IsMatch(TypePair context) => context.SourceType == typeof(string) &&
-                                                 ElementTypeHelper.GetEnumerationType(context.DestinationType) != null;
-
-        public Expression MapExpression(IConfigurationProvider configurationProvider, ProfileMap profileMap,
-            IMemberMap memberMap, Expression sourceExpression, Expression destExpression,
-            Expression contextExpression)
-        {
-            var destinationType = destExpression.Type;
-            var destinationEnumType = ElementTypeHelper.GetEnumerationType(destinationType);
-            var enumParse = Expression.Call(typeof(Enum), "Parse", null, Expression.Constant(destinationEnumType),
-                sourceExpression, Expression.Constant(true));
-            var switchCases = new List<SwitchCase>();
-            var enumNames = destinationEnumType.GetDeclaredMembers();
-            foreach (var memberInfo in enumNames.Where(x => x.IsStatic()))
-            {
-                var attribute = memberInfo.GetCustomAttribute(typeof(EnumMemberAttribute)) as EnumMemberAttribute;
-                if (attribute?.Value != null)
-                {
-                    var switchCase = Expression.SwitchCase(
-                        ToType(Expression.Constant(Enum.ToObject(destinationEnumType, memberInfo.GetMemberValue(null))),
-                            destinationType), Expression.Constant(attribute.Value));
-                    switchCases.Add(switchCase);
-                }
-            }
-            var equalsMethodInfo = Method(() => StringCompareOrdinalIgnoreCase(null, null));
-            var switchTable = switchCases.Count > 0
-                ? Expression.Switch(sourceExpression, ToType(enumParse, destinationType), equalsMethodInfo, switchCases)
-                : ToType(enumParse, destinationType);
-            var isNullOrEmpty = Expression.Call(typeof(string), "IsNullOrEmpty", null, sourceExpression);
-            return Expression.Condition(isNullOrEmpty, Expression.Default(destinationType), switchTable);
-        }
-
-        private static bool StringCompareOrdinalIgnoreCase(string x, string y)
-        {
-            return StringComparer.OrdinalIgnoreCase.Equals(x, y);
-        }
+        var destinationType = destExpression.Type;
+        var ignoreCase = True;
+        var enumParse = Call(ParseMethod.MakeGenericMethod(destinationType), sourceExpression, ignoreCase);
+        var enumMember = CheckEnumMember(sourceExpression, destinationType, enumParse, EqualsMethod);
+        return Condition(Equal(Property(sourceExpression, Length), Zero), configuration.Default(destinationType), enumMember);
     }
+    internal static Expression CheckEnumMember(Expression sourceExpression, Type enumType, Expression defaultExpression, MethodInfo comparison = null)
+    {
+        List<SwitchCase> switchCases = null;
+        foreach (var memberInfo in enumType.GetFields(TypeExtensions.StaticFlags))
+        {
+            var attributeValue = memberInfo.GetCustomAttribute<EnumMemberAttribute>()?.Value;
+            if (attributeValue == null)
+            {
+                continue;
+            }
+            var enumToObject = Constant(Enum.ToObject(enumType, memberInfo.GetValue(null)));
+            var attributeConstant = Constant(attributeValue);
+            var (body, testValue) = comparison == null ? (attributeConstant, enumToObject) : (ToType(enumToObject, enumType), attributeConstant);
+            switchCases ??= [];
+            switchCases.Add(SwitchCase(body, testValue));
+        }
+        return switchCases == null ? defaultExpression : Switch(sourceExpression, defaultExpression, comparison, switchCases);
+    }
+    public static bool StringCompareOrdinalIgnoreCase(string x, string y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
 }

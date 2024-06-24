@@ -1,8 +1,10 @@
-<img src="https://s3.amazonaws.com/automapper/logo.png" alt="AutoMapper">
+![AutoMapper](https://camo.githubusercontent.com/603a9fdf1c6578e4df423ecdb784cb5d634e016850c10ba0798970fd48c55d41/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6175746f6d61707065722f6c6f676f2e706e67)
 
-[![Build status](https://ci.appveyor.com/api/projects/status/q261l3sbokafmx1o/branch/master?svg=true)](https://ci.appveyor.com/project/jbogard/automapper/branch/master)
-[![NuGet](http://img.shields.io/nuget/v/AutoMapper.svg)](https://www.nuget.org/packages/AutoMapper/)
-[![MyGet (dev)](https://img.shields.io/myget/automapperdev/v/AutoMapper.svg)](http://myget.org/gallery/automapperdev)
+[![CI](https://github.com/automapper/automapper/workflows/CI/badge.svg)](https://github.com/AutoMapper/AutoMapper/actions?query=workflow%3ACI)
+[![NuGet](http://img.shields.io/nuget/vpre/AutoMapper.svg?label=NuGet)](https://www.nuget.org/packages/AutoMapper/)
+[![MyGet (dev)](https://img.shields.io/myget/automapperdev/vpre/AutoMapper.svg?label=MyGet)](https://myget.org/feed/automapperdev/package/nuget/AutoMapper)
+[![Documentation Status](https://readthedocs.org/projects/automapper/badge/?version=stable)](https://docs.automapper.org/en/stable/?badge=stable)
+
 
 ### What is AutoMapper?
 
@@ -10,11 +12,11 @@ AutoMapper is a simple little library built to solve a deceptively complex probl
 
 This is the main repository for AutoMapper, but there's more:
 
+* [Collection Extensions](https://github.com/AutoMapper/AutoMapper.Collection)
+* [Expression Mapping](https://github.com/AutoMapper/AutoMapper.Extensions.ExpressionMapping)
 * [EF6 Extensions](https://github.com/AutoMapper/AutoMapper.EF6)
 * [IDataReader/Record Extensions](https://github.com/AutoMapper/AutoMapper.Data)
-* [Collection Extensions](https://github.com/AutoMapper/AutoMapper.Collection)
-* [Microsoft DI Extensions](https://github.com/AutoMapper/AutoMapper.Extensions.Microsoft.DependencyInjection)
-* [Expression Mapping](https://github.com/AutoMapper/AutoMapper.Extensions.ExpressionMapping)
+* [Enum Extensions](https://github.com/AutoMapper/AutoMapper.Extensions.EnumMapping)
 
 ### How do I get started?
 
@@ -27,7 +29,9 @@ var configuration = new MapperConfiguration(cfg =>
     cfg.CreateMap<Bar, BarDto>();
 });
 // only during development, validate your mappings; remove it before release
+#if DEBUG
 configuration.AssertConfigurationIsValid();
+#endif
 // use DI (http://docs.automapper.org/en/latest/Dependency-injection.html) or create the mapper yourself
 var mapper = configuration.CreateMapper();
 ```
@@ -46,6 +50,10 @@ First, [install NuGet](http://docs.nuget.org/docs/start-here/installing-nuget). 
 
 ```
 PM> Install-Package AutoMapper
+```
+Or from the .NET CLI as:
+```
+dotnet add package AutoMapper
 ```
 
 ### Do you have an issue?

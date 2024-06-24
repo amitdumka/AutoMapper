@@ -1,30 +1,11 @@
-using System;
-using System.Linq.Expressions;
-using AutoMapper.Configuration;
-using AutoMapper.Execution;
+namespace AutoMapper.Internal.Mappers;
 
-namespace AutoMapper.Mappers
+public class NullableSourceMapper : IObjectMapper
 {
-    using static Expression;
-
-    public class NullableSourceMapper : IObjectMapperInfo
-    {
-        public bool IsMatch(TypePair context) => context.SourceType.IsNullableType();
-
-        public Expression MapExpression(IConfigurationProvider configurationProvider, ProfileMap profileMap,
-            IMemberMap memberMap, Expression sourceExpression, Expression destExpression,
-            Expression contextExpression) =>
-                ExpressionBuilder.MapExpression(configurationProvider, profileMap,
-                    new TypePair(Nullable.GetUnderlyingType(sourceExpression.Type), destExpression.Type),
-                    Property(sourceExpression, sourceExpression.Type.GetDeclaredProperty("Value")),
-                    contextExpression,
-                    memberMap,
-                    destExpression
-                );
-
-        public TypePair GetAssociatedTypes(TypePair initialTypes)
-        {
-            return new TypePair(Nullable.GetUnderlyingType(initialTypes.SourceType), initialTypes.DestinationType);
-        }
-    }
+    public bool IsMatch(TypePair context) => context.SourceType.IsNullableType();
+    public Expression MapExpression(IGlobalConfiguration configuration, ProfileMap profileMap, MemberMap memberMap, Expression sourceExpression, Expression destExpression) =>
+        configuration.MapExpression(profileMap, GetAssociatedTypes(sourceExpression.Type, destExpression.Type),
+                ExpressionBuilder.Property(sourceExpression, "Value"), memberMap, destExpression);
+    public TypePair? GetAssociatedTypes(TypePair initialTypes) => GetAssociatedTypes(initialTypes.SourceType, initialTypes.DestinationType);
+    TypePair GetAssociatedTypes(Type sourceType, Type destinationType) => new(Nullable.GetUnderlyingType(sourceType), destinationType);
 }

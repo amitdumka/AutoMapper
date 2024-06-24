@@ -2,11 +2,6 @@
 {
     namespace InheritedMaps
     {
-        using System.Linq;
-        using QueryableExtensions;
-        using Shouldly;
-        using Xunit;
-
         public class SourceBase
         {
             public int OtherValue { get; set; }
@@ -26,13 +21,13 @@
         {
             private Dest[] _dest;
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<SourceBase, Dest>()
                     .Include<Source, Dest>()
                     .ForMember(d => d.Value, opt => opt.MapFrom(src => src.OtherValue));
 
-                cfg.CreateMap<Source, Dest>();
+                cfg.CreateProjection<Source, Dest>();
             });
 
             protected override void Because_of()

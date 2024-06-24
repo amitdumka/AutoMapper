@@ -1,115 +1,86 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Data.Entity;
-using System.Linq;
-using Xunit;
-using Shouldly;
+﻿namespace AutoMapper.IntegrationTests.CustomMapFrom;
 
-namespace AutoMapper.IntegrationTests.Net4
+public class CustomMapFromTest : IntegrationTest<CustomMapFromTest.DatabaseInitializer>
 {
-    namespace CustomMapFromTest
+    protected override MapperConfiguration CreateConfiguration() => new(cfg => cfg.CreateProjection<Customer, CustomerViewModel>()
+            .ForMember(x => x.FullAddress, o => o.MapFrom(c => c.Address.Street + ", " + c.Address.City + " " + c.Address.State)));
+    [Fact]
+    public void can_map_with_projection()
     {
-        using AutoMapper.UnitTests;
-        using QueryableExtensions;
-
-        public class Customer
+        using (var context = new Context())
         {
-            [Key]
-            public int Id { get; set; }
-            public string FirstName { get; set; }
-            public string LastName { get; set; }
-
-            public Address Address { get; set; }
-        }
-
-        public class Address
-        {
-            [Key]
-            public int Id { get; set; }
-            public string Street { get; set; }
-            public string City { get; set; }
-            public string State { get; set; }
-        }
-
-        public class CustomerViewModel
-        {
-            public string FirstName { get; set; }
-            public string LastName { get; set; }
-
-            public string FullAddress { get; set; }
-        }
-
-        public class Context : DbContext
-        {
-            public Context()
-                : base()
+            var customerVms = context.Customers.Select(c => new CustomerViewModel
             {
-                Database.SetInitializer<Context>(new DatabaseInitializer());
-            }
+                FirstName = c.FirstName,
+                LastName = c.LastName,
+                FullAddress = c.Address.Street + ", " + c.Address.City + " " + c.Address.State
+            }).ToList();
 
-            public DbSet<Customer> Customers { get; set; }
-            public DbSet<Address> Addresses { get; set; }
-
-        }
-
-        public class DatabaseInitializer : CreateDatabaseIfNotExists<Context>
-        {
-            protected override void Seed(Context context)
+            customerVms.ForEach(x =>
             {
-                context.Customers.Add(new Customer
-                {
-                    Id = 1,
-                    FirstName = "Bob",
-                    LastName = "Smith",
-                    Address = new Address
-                    {
-                        Id = 1,
-                        Street = "123 Anywhere",
-                        City = "Austin",
-                        State = "TX"
-                    }
-                });
-
-                base.Seed(context);
-            }
-        }
-        
-        public class AutoMapperQueryableExtensionsThrowsNullReferenceExceptionSpec : AutoMapperSpecBase
-        {
-            protected override MapperConfiguration Configuration => new MapperConfiguration(cfg =>
-            {
-                cfg.CreateMap<Customer, CustomerViewModel>()
-                    .ForMember(x => x.FullAddress,
-                        o => o.MapFrom(c => c.Address.Street + ", " + c.Address.City + " " + c.Address.State));
+                x.FullAddress.ShouldNotBeNull();
+                x.FullAddress.ShouldNotBeEmpty();
             });
 
-            [Fact]
-            public void can_map_with_projection()
+            customerVms = ProjectTo<CustomerViewModel>(context.Customers).ToList();
+            customerVms.ForEach(x =>
             {
-                using (var context = new Context())
+                x.FullAddress.ShouldNotBeNull();
+                x.FullAddress.ShouldNotBeEmpty();
+            });
+        }
+    }
+    public class Customer
+    {
+        [Key]
+        public int Id { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+
+        public Address Address { get; set; }
+    }
+
+    public class Address
+    {
+        [Key]
+        public int Id { get; set; }
+        public string Street { get; set; }
+        public string City { get; set; }
+        public string State { get; set; }
+    }
+
+    public class CustomerViewModel
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+
+        public string FullAddress { get; set; }
+    }
+
+    public class Context : LocalDbContext
+    {
+        public DbSet<Customer> Customers { get; set; }
+        public DbSet<Address> Addresses { get; set; }
+
+    }
+
+    public class DatabaseInitializer : DropCreateDatabaseAlways<Context>
+    {
+        protected override void Seed(Context context)
+        {
+            context.Customers.Add(new Customer
+            {
+                FirstName = "Bob",
+                LastName = "Smith",
+                Address = new Address
                 {
-                    var customerVms = context.Customers.Select(c => new CustomerViewModel
-                    {
-                        FirstName = c.FirstName,
-                        LastName = c.LastName,
-                        FullAddress = c.Address.Street + ", " + c.Address.City + " " + c.Address.State
-                    }).ToList();
-
-                    customerVms.ForEach(x =>
-                    {
-                        x.FullAddress.ShouldNotBeNull();
-                        x.FullAddress.ShouldNotBeEmpty();
-                    });
-
-                    customerVms = ProjectTo<CustomerViewModel>(context.Customers).ToList();
-                    customerVms.ForEach(x =>
-                    {
-                        x.FullAddress.ShouldNotBeNull();
-                        x.FullAddress.ShouldNotBeEmpty();
-                    });
+                    Street = "123 Anywhere",
+                    City = "Austin",
+                    State = "TX"
                 }
-            }
+            });
+
+            base.Seed(context);
         }
     }
 }

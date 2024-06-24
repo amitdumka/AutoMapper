@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using Xunit;
-using System.Linq;
-using Shouldly;
-
-namespace AutoMapper.UnitTests.Projection
+﻿namespace AutoMapper.UnitTests.Projection
 {
     namespace PrimitiveArrays
     {
-        using QueryableExtensions;
-
         public class PrimitiveArraysExpressionTest
         {
             [Fact]
@@ -17,10 +9,10 @@ namespace AutoMapper.UnitTests.Projection
             {
                 var config = new MapperConfiguration(cfg =>
                 {
-                    cfg.CreateMap<Source, Destination>();
+                    cfg.CreateProjection<Source, Destination>();
                 });
 
-                typeof(NullReferenceException).ShouldNotBeThrownBy(() => config.ExpressionBuilder.GetMapExpression<Source, Destination>());
+                typeof(NullReferenceException).ShouldNotBeThrownBy(() => config.Internal().ProjectionBuilder.GetMapExpression<Source, Destination>());
             }
 
             [Fact]
@@ -28,7 +20,7 @@ namespace AutoMapper.UnitTests.Projection
             {
                 var config = new MapperConfiguration(cfg =>
                 {
-                    cfg.CreateMap<Source, Destination>();
+                    cfg.CreateProjection<Source, Destination>();
                 });
 
                 var sources = new List<Source>

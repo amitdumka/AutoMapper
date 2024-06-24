@@ -1,42 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Shouldly;
-using Xunit;
+﻿namespace AutoMapper.UnitTests;
 
-namespace AutoMapper.UnitTests
+public class AddProfiles : AutoMapperSpecBase
 {
-    public class AddProfiles : SpecBase
+    public class Source { }
+    public class Dest { }
+    public class ForwardProfile : Profile
     {
-        public class Source { }
-        public class Dest { }
-
-        public class ForwardProfile : Profile
-        {
-            public ForwardProfile()
-            {
-                CreateMap<Source, Dest>();
-            }
-        }
-
-        public class ReverseProfile : Profile
-        {
-            public ReverseProfile()
-            {
-                CreateMap<Dest, Source>();
-            }
-        }
-
-        [Fact]
-        public void Should_not_throw_when_loading_multiple_profiles()
-        {
-            IEnumerable<Profile> profiles = new Profile[] { new ForwardProfile(), new ReverseProfile() };
-            var config = new MapperConfiguration(cfg => cfg.AddProfiles(profiles));
-
-            config.AssertConfigurationIsValid();
-            int result = config.Profiles.Count();
-            result.ShouldBe(3); // default plus two specifically added.
-        }
-
+        public ForwardProfile() => CreateMap<Source, Dest>();
     }
+    public class ReverseProfile : Profile
+    {
+        public ReverseProfile() => CreateMap<Dest, Source>();
+    }
+    protected override MapperConfiguration CreateConfiguration() => new(c => c.AddProfiles(new Profile[] { new ForwardProfile(), new ReverseProfile() }));
+    [Fact]
+    public void Should_not_throw_when_loading_multiple_profiles() => GetProfiles().Count().ShouldBe(3); // default plus two specifically added
 }

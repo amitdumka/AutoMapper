@@ -1,31 +1,22 @@
-﻿using System.Linq;
-using Shouldly;
-using System;
-using System.Reflection;
-using Xunit;
-
-namespace AutoMapper.UnitTests
+﻿namespace AutoMapper.UnitTests
 {
     namespace AssemblyScanning
     {
         public class When_scanning_by_assembly : NonValidatingSpecBase
         {
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
-                cfg.AddMaps(new[] { typeof(When_scanning_by_assembly).Assembly(), typeof(Mapper).Assembly });
+                cfg.AddMaps(new[] { typeof(When_scanning_by_assembly).Assembly, typeof(Mapper).Assembly });
             });
 
             [Fact]
             public void Should_load_profiles()
             {
-                Configuration.GetAllTypeMaps().Length.ShouldBeGreaterThan(0);
+                Configuration.GetAllTypeMaps().Count.ShouldBeGreaterThan(0);
             }
 
             [Fact]
-            public void Should_load_internal_profiles()
-            {
-                Configuration.Profiles.Where(t => t.Name == InternalProfile.Name).ShouldNotBeEmpty();
-            }
+            public void Should_load_internal_profiles() => GetProfiles().Where(t => t.Name == InternalProfile.Name).ShouldNotBeEmpty();
         }
 
         internal class InternalProfile : Profile
@@ -39,7 +30,7 @@ namespace AutoMapper.UnitTests
 
         public class When_scanning_by_type : NonValidatingSpecBase
         {
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.AddMaps(new[] { typeof(When_scanning_by_assembly) });
             });
@@ -47,7 +38,7 @@ namespace AutoMapper.UnitTests
             [Fact]
             public void Should_load_profiles()
             {
-                Configuration.GetAllTypeMaps().Length.ShouldBeGreaterThan(0);
+                Configuration.GetAllTypeMaps().Count.ShouldBeGreaterThan(0);
             }
         }
 
@@ -55,7 +46,7 @@ namespace AutoMapper.UnitTests
         {
             private static readonly Assembly AutoMapperAssembly = typeof(When_scanning_by_name).Assembly;
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
                 cfg.AddMaps(new[] { AutoMapperAssembly.FullName });
@@ -67,7 +58,7 @@ namespace AutoMapper.UnitTests
             [Fact]
             public void Should_load_profiles()
             {
-                Configuration.GetAllTypeMaps().Length.ShouldBeGreaterThan(0);
+                Configuration.GetAllTypeMaps().Count.ShouldBeGreaterThan(0);
             }
         }
     }

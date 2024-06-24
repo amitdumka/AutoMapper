@@ -1,7 +1,3 @@
-using System;
-using Xunit;
-using Shouldly;
-
 namespace AutoMapper.UnitTests
 {
     namespace NestedContainers
@@ -50,7 +46,7 @@ namespace AutoMapper.UnitTests
                 public int Value2 { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<Source, Dest>()
                     .ForMember(x => x.Value, opt => opt.MapFrom<FooResolver, int>(x => x.Value))
@@ -116,7 +112,7 @@ namespace AutoMapper.UnitTests
                 public int Value2 { get; set; }
             }
 
-            protected override MapperConfiguration Configuration { get; } = new MapperConfiguration(cfg =>
+            protected override MapperConfiguration CreateConfiguration() => new(cfg =>
             {
                 cfg.CreateMap<Source, Dest>()
                     .ConvertUsing<FooTypeConverter>();
